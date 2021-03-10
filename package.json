@@ -5,6 +5,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/XiaocongDong/kubernetes-axios-informer.git",
+  "files": [
+    "dist/*.ts",
+    "dist/*.js",
+    "README.md"
+  ],
   "scripts": {
     "format": "prettier --loglevel error --write \"./src/**/*.ts\"",
     "lint": "eslint \"src/**/*.ts\" --fix",
