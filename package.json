@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
+    "@kubernetes/client-node": "^0.14.0",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.6.1",
     "eslint": "^7.21.0",
