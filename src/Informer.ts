@@ -71,6 +71,11 @@ export class Informer<T> {
     this.cache.syncObjects(list.items)
     await this.handleSync()
 
+    // informer may have been stopped since the above request is asynchronous
+    if (!this.started) {
+      return
+    }
+
     this.request = await this.watch.watch(
       this.path,
       { resourceVersion: list.metadata!.resourceVersion},

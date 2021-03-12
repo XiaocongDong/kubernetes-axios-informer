@@ -42,7 +42,8 @@ export const webRequest = (opts: OptionsWithUri): RequestResult => {
       httpsAgent: new Agent({
         ca: opts.ca,
         cert: opts.cert,
-        key: opts.key
+        key: opts.key,
+        rejectUnauthorized: opts.rejectUnauthorized
       })
     })
     .then((response) => {
