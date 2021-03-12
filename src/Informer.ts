@@ -54,6 +54,7 @@ export class Informer<T> {
   private async doneHandler(err?: any) {
     if (err) {
       // handle error to see if it is a 410 GONE error, this needs to recover from resourceVersion
+      console.error(`informer failed for ${err}`)
     }
 
     if (this.request) {
