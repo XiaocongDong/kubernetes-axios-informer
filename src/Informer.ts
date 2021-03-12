@@ -54,7 +54,7 @@ export class Informer<T> {
   private async doneHandler(err?: any) {
     if (err) {
       // handle error to see if it is a 410 GONE error, this needs to recover from resourceVersion
-      console.error(`informer failed for ${err}`)
+      this.handleError(new Error(`informer failed for ${err}`))
     }
 
     if (this.request) {
@@ -83,6 +83,13 @@ export class Informer<T> {
       this.watchHandler.bind(this),
       this.doneHandler.bind(this)
     )
+  }
+
+  private handleError(err) {
+    const errorCallbacks = this.callbackCache[EVENT.ERROR] || []
+    errorCallbacks.forEach(callback => {
+      callback(err)
+    })
   }
 
   private async handleSync() {

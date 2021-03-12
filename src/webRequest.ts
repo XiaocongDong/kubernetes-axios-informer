@@ -39,6 +39,7 @@ export const webRequest = (opts: OptionsWithUri): RequestResult => {
       url: opts.uri as string,
       params: opts.qs,
       responseType: 'stream',
+      headers: opts.headers,
       httpsAgent: new Agent({
         ca: opts.ca,
         cert: opts.cert,
