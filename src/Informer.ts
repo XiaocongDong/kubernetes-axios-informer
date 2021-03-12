@@ -1,4 +1,4 @@
-import { ListPromise, ObjectCallback, Watch } from '@kubernetes/client-node'
+import { KubernetesObject, ListPromise, ObjectCallback, Watch } from '@kubernetes/client-node'
 import { RequestResult } from './webRequest'
 import { Cache } from './Cache'
 
@@ -17,12 +17,13 @@ export class Informer<T> {
   private started: boolean = false
   private resourceVersion: string|undefined = undefined
   
-  public cache: Cache<T> = new Cache<T>()
+  public cache: Cache<T>|null = null
 
   public constructor(
     private readonly path: string,
     private readonly watch: Watch,
     private listFn: ListPromise<T>,
+    private enableCache: boolean = true
   ) {
     this.callbackCache[EVENT.ADD] = []
     this.callbackCache[EVENT.UPDATE] = []
@@ -30,6 +31,10 @@ export class Informer<T> {
     this.callbackCache[EVENT.ERROR] = []
     
     this.syncCallbacks = []
+
+    if (this.enableCache) {
+      this.cache = new Cache<T>()
+    }
   }
 
   public async start(): Promise<void> {
@@ -69,8 +74,9 @@ export class Informer<T> {
     const list = result.body
     this.resourceVersion = list.metadata!.resourceVersion
 
-    this.cache.syncObjects(list.items)
-    await this.handleSync()
+    this.cache && this.cache.syncObjects(list.items)
+  
+    await this.handleSync(list)
 
     // informer may have been stopped since the above request is asynchronous
     if (!this.started) {
@@ -92,10 +98,10 @@ export class Informer<T> {
     })
   }
 
-  private async handleSync() {
+  private async handleSync(list) {
     try {
       for(let handler of this.syncCallbacks) {
-        await handler(this.cache.list())
+        await handler(list)
       }
     } catch(e) {
       console.error(`Informer call sync callback error for ${e}`)
@@ -105,15 +111,15 @@ export class Informer<T> {
   private watchHandler(phase: string, obj: T, watchObj?: any): void {
     switch (phase) {
       case 'ADDED':
-        this.cache.addOrUpdateObject(obj)
+        this.cache && this.cache.addOrUpdateObject(obj)
         this.handleEvent(EVENT.ADD, obj)
         break
       case 'MODIFIED':
-        this.cache.addOrUpdateObject(obj)
+        this.cache && this.cache.addOrUpdateObject(obj)
         this.handleEvent(EVENT.UPDATE, obj)
         break
       case 'DELETED':
-        this.cache.deleteObject(obj)
+        this.cache && this.cache.deleteObject(obj)
         this.handleEvent(EVENT.DELETE, obj)
         break
       case 'BOOKMARK':
