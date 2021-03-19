@@ -1,4 +1,4 @@
-import { KubernetesObject, ListPromise, ObjectCallback, Watch } from '@kubernetes/client-node'
+import { KubernetesListObject, ListPromise, ObjectCallback, Watch } from '@kubernetes/client-node'
 import { RequestResult } from './webRequest'
 import { Cache } from './Cache'
 
@@ -8,7 +8,7 @@ export enum EVENT {
   DELETE = 'delete',
   ERROR = 'error'
 }
-type SyncCallback<T> = (items: readonly T[]) => void
+type SyncCallback<T> = (items: KubernetesListObject<T>) => void
 
 export class Informer<T> {
   private callbackCache: {[event: string]: Array<ObjectCallback<T>>} = {}
