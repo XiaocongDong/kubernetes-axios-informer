@@ -1,10 +1,10 @@
 {
-  "name": "kubernetes-axios-informer",
+  "name": "kubernetes-enhanced-informer",
   "version": "0.0.8",
   "description": "Informer for kubernete based axios",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/XiaocongDong/kubernetes-axios-informer.git",
+  "repository": "https://github.com/joshughes/kubernetes-axios-informer",
   "files": [
     "dist/*.ts",
     "dist/*.js",
@@ -16,10 +16,10 @@
     "test": "jest",
     "build": "tsc"
   },
-  "author": "Dong Xiaocong <buptdxc@gmail.com>",
+  "author": "Joseph Hughes",
   "license": "MIT",
   "peerDependencies": {
-    "@kubernetes/client-node": "^0.14.0"
+    "@kubernetes/client-node": "^0.16.0"
   },
   "husky": {
     "hooks": {
@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.20",
-    "@kubernetes/client-node": "^0.14.0",
+    "@kubernetes/client-node": "^0.16.0",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.6.1",
     "eslint": "^7.21.0",
@@ -71,7 +71,7 @@
   },
   "dependencies": {
     "@types/request": "^2.48.5",
-    "axios": "^0.21.1"
+    "axios": "^0.25.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

@@ -41,6 +41,7 @@ export const webRequest = (opts: OptionsWithUri): RequestResult => {
       responseType: 'stream',
       headers: opts.headers,
       httpsAgent: new Agent({
+        keepAlive: true,
         ca: opts.ca,
         cert: opts.cert,
         key: opts.key,
