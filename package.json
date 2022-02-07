@@ -1,6 +1,6 @@
 {
   "name": "kubernetes-enhanced-informer",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Informer for kubernete based axios",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -71,7 +71,7 @@
   },
   "dependencies": {
     "@types/request": "^2.48.5",
-    "axios": "^0.25.0"
+    "axios": "^0.21.1"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
