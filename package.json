@@ -1,6 +1,6 @@
 {
   "name": "kubernetes-enhanced-informer",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "description": "Informer for kubernete based axios",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -48,8 +48,8 @@
     ]
   },
   "devDependencies": {
-    "@types/jest": "^26.0.20",
     "@kubernetes/client-node": "^0.16.0",
+    "@types/jest": "^26.0.20",
     "@typescript-eslint/eslint-plugin": "^4.16.1",
     "@typescript-eslint/parser": "^4.6.1",
     "eslint": "^7.21.0",
