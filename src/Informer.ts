@@ -11,13 +11,13 @@ export enum EVENT {
 type SyncCallback<T> = (items: KubernetesListObject<T>) => void
 
 export class Informer<T> {
-  private callbackCache: {[event: string]: Array<ObjectCallback<T>>} = {}
+  private callbackCache: { [event: string]: Array<ObjectCallback<T>> } = {}
   private syncCallbacks: Array<SyncCallback<T>> = []
-  private request: RequestResult|undefined = undefined
-  private started: boolean = false
-  private resourceVersion: string|undefined = undefined
-  
-  public cache: Cache<T>|null = null
+  private request: RequestResult | undefined = undefined
+  private started = false
+  private resourceVersion: string | undefined = undefined
+
+  public cache: Cache<T> | null = null
 
   public constructor(
     private readonly path: string,
@@ -29,7 +29,7 @@ export class Informer<T> {
     this.callbackCache[EVENT.UPDATE] = []
     this.callbackCache[EVENT.DELETE] = []
     this.callbackCache[EVENT.ERROR] = []
-    
+
     this.syncCallbacks = []
 
     if (this.enableCache) {
@@ -75,7 +75,7 @@ export class Informer<T> {
     this.resourceVersion = list.metadata!.resourceVersion
 
     this.cache && this.cache.syncObjects(list.items)
-  
+
     await this.handleSync(list)
 
     // informer may have been stopped since the above request is asynchronous
@@ -85,7 +85,7 @@ export class Informer<T> {
 
     this.request = await this.watch.watch(
       this.path,
-      { resourceVersion: list.metadata!.resourceVersion},
+      { resourceVersion: list.metadata!.resourceVersion },
       this.watchHandler.bind(this),
       this.doneHandler.bind(this)
     )
@@ -93,17 +93,17 @@ export class Informer<T> {
 
   private handleError(err) {
     const errorCallbacks = this.callbackCache[EVENT.ERROR] || []
-    errorCallbacks.forEach(callback => {
+    errorCallbacks.forEach((callback) => {
       callback(err)
     })
   }
 
   private async handleSync(list) {
     try {
-      for(let handler of this.syncCallbacks) {
+      for (const handler of this.syncCallbacks) {
         await handler(list)
       }
-    } catch(e) {
+    } catch (e) {
       console.error(`Informer call sync callback error for ${e}`)
     }
   }
