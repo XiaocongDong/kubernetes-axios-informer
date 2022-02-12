@@ -4,6 +4,25 @@ import fetch from 'node-fetch'
 import { OptionsWithUri } from 'request'
 import { Duplex, Transform } from 'stream'
 
+class RequestResultStream extends Transform {
+  private cancelTokenSource: CancelTokenSource
+
+  constructor(cancelToken: CancelTokenSource, options?) {
+    super(options)
+    this.cancelTokenSource = cancelToken
+  }
+
+  abort() {
+    this.cancelTokenSource.cancel()
+  }
+
+  _transform(chunk, encoding, done) {
+    this.push(chunk, encoding)
+    done()
+  }
+}
+
+
 // since @kubernetes/client doesn't export RequestResult interface (src/watch)
 export interface RequestResult {
   pipe(stream: Duplex): void
