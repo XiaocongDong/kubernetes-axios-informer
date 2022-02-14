@@ -2,7 +2,6 @@ import * as k8s from '@kubernetes/client-node'
 import { Agent } from 'https'
 import axios, { AxiosRequestHeaders } from 'axios'
 import * as https from 'https'
-import * as byline from 'byline'
 
 const kc = new k8s.KubeConfig()
 kc.loadFromDefault()
@@ -11,16 +10,18 @@ const cluster = kc.getCurrentCluster()
 
 const opts: https.RequestOptions = {}
 
+const container = 'controltowerserver'
+const namespace = 'controltower'
+const podName = 'controltower-atc-0'
+
 const params: any = {
-  allowWatchBookmarks: true
+  follow: true,
+  container
 }
-params.watch = true
 
 kc.applytoHTTPSOptions(opts)
 
 const controller = new AbortController()
-const stream = byline.createStream()
-
 const httpsAgent = new Agent({
   keepAlive: true,
   ca: opts.ca,
@@ -29,7 +30,7 @@ const httpsAgent = new Agent({
   rejectUnauthorized: opts.rejectUnauthorized
 })
 
-const url = cluster?.server + '/api/v1/namespaces'
+const url = cluster?.server + `/api/v1/namespaces/${namespace}/pods/${podName}/log`
 axios
   .request({
     method: 'GET',
@@ -41,7 +42,7 @@ axios
     httpsAgent
   })
   .then((response) => {
-    response.data.pipe(stream)
+    response.data.pipe(process.stdout)
     response.data.on('end', function () {
       console.log('finished')
     })
@@ -50,23 +51,10 @@ axios
     console.error(err)
   })
 
-stream.on('data', (line) => {
-  try {
-    const data = JSON.parse(line)
-    console.log({ data })
-  } catch (ignore) {
-    // ignore parse errors
-  }
-})
-
-stream.on('close', () => {
-  httpsAgent.destroy()
-})
-
-setTimeout(() => {
-  console.log('Aboring')
-  controller.abort()
-  httpsAgent.destroy()
-  console.log('Aborted')
-}, 10000)
+// setTimeout(() => {
+//   console.log('Aboring')
+//   controller.abort()
+//   httpsAgent.destroy()
+//   console.log('Aborted')
+// }, 10000)
 console.log(opts)
