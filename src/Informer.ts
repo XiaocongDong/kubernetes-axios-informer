@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { ListPromise } from '@kubernetes/client-node'
 import { Cache } from './Cache'
 import { PassThrough, Transform, TransformOptions } from 'stream'
@@ -67,19 +68,23 @@ export class Informer<T> {
     })
   }
 
-  public async start(): Promise<void> {
+  public start(): void {
     if (this.started) {
       console.warn('informer has already started')
       return
     }
 
     this.started = true
+    console.log('Making watch request')
     this.makeWatchRequest()
+    console.log('Fully Started')
   }
 
   public stop(): void {
     this.started = false
+    console.log('Aboring')
     this.controller.abort()
+    console.log('aborted')
   }
 
   private makeWatchRequest(): void {
@@ -94,7 +99,6 @@ export class Informer<T> {
 
     this.kubeConfig.applytoHTTPSOptions(opts)
 
-    const controller = new AbortController()
     const stream = byline.createStream()
     const simpleTransform = new SimpleTransform()
 
@@ -107,12 +111,16 @@ export class Informer<T> {
     })
 
     const url = cluster?.server + this.path
+    this.controller.signal.addEventListener('abort', () => {
+      console.log('Abort singal happened!!!')
+      httpsAgent.destroy()
+    })
 
     axios
       .request({
         method: 'GET',
         headers: opts.headers as AxiosRequestHeaders,
-        signal: controller.signal,
+        signal: this.controller.signal,
         url,
         params,
         responseType: 'stream',
@@ -120,9 +128,6 @@ export class Informer<T> {
       })
       .then((response) => {
         response.data.pipe(stream).pipe(simpleTransform).pipe(this.stream, { end: false })
-        response.data.once('end', () => {
-          httpsAgent.destroy()
-        })
       })
       .catch((err) => {
         httpsAgent.destroy()
