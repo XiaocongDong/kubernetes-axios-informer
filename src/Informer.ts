@@ -73,18 +73,13 @@ export class Informer<T> {
       console.warn('informer has already started')
       return
     }
-
     this.started = true
-    console.log('Making watch request')
     this.makeWatchRequest()
-    console.log('Fully Started')
   }
 
   public stop(): void {
     this.started = false
-    console.log('Aboring')
     this.controller.abort()
-    console.log('aborted')
   }
 
   private makeWatchRequest(): void {
@@ -103,7 +98,7 @@ export class Informer<T> {
     const simpleTransform = new SimpleTransform()
 
     const httpsAgent = new Agent({
-      keepAlive: true,
+      keepAlive: false,
       ca: opts.ca,
       cert: opts.cert,
       key: opts.key,
@@ -111,8 +106,11 @@ export class Informer<T> {
     })
 
     const url = cluster?.server + this.path
+
+    // unsure why abort does not cause axios to do the right thing
+    // when we destroy the http agent it closes all connections
     this.controller.signal.addEventListener('abort', () => {
-      console.log('Abort singal happened!!!')
+      console.log('destroying https agent')
       httpsAgent.destroy()
     })
 
@@ -128,6 +126,11 @@ export class Informer<T> {
       })
       .then((response) => {
         response.data.pipe(stream).pipe(simpleTransform).pipe(this.stream, { end: false })
+        response.data
+          .on('end', () => console.log('end'))
+          .on('close', () => console.log('close'))
+          .on('aborted', () => console.log('aborted'))
+          .on('error', (err) => console.log(err))
       })
       .catch((err) => {
         httpsAgent.destroy()

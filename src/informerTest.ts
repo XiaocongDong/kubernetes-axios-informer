@@ -12,8 +12,8 @@ async function main() {
     // eslint-disable-next-line no-console
     console.log(`Got and update for ${object?.metadata?.name}`)
   })
-  await informer.start()
-  setTimeout(async () => {
+  informer.start()
+  setTimeout(() => {
     // eslint-disable-next-line no-console
     console.log('Stopping the informer')
     informer.stop()

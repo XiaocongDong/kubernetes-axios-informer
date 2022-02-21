@@ -73,7 +73,7 @@
   "dependencies": {
     "@types/node": "16.11.7",
     "@types/request": "^2.48.5",
-    "axios": "^0.25.0",
+    "axios": "^0.26.0",
     "byline": "^5.0.0",
     "node-abort-controller": "^3.0.1",
     "node-fetch": "^3.2.0"
