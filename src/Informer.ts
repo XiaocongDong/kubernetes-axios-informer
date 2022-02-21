@@ -1,5 +1,4 @@
-import { ListPromise, Watch } from '@kubernetes/client-node'
-import { RequestResult } from './webRequest'
+import { ListPromise } from '@kubernetes/client-node'
 import { Cache } from './Cache'
 import { PassThrough, Transform, TransformOptions } from 'stream'
 import { Agent } from 'https'
@@ -49,7 +48,6 @@ export class Informer<T> {
   private controller: AbortController = new AbortController()
   events = new EventEmitter()
   stream = new PassThrough({ objectMode: true })
-  private request: RequestResult | undefined = undefined
   private started = false
   private resourceVersion: string | undefined = undefined
 
@@ -57,8 +55,8 @@ export class Informer<T> {
 
   public constructor(
     private readonly path: string,
-    private readonly watch: Watch,
     private listFn: ListPromise<T>,
+    private kubeConfig: k8s.KubeConfig,
     private enableCache: boolean = true
   ) {
     if (this.enableCache) {
@@ -76,7 +74,7 @@ export class Informer<T> {
     }
 
     this.started = true
-    await this.doneHandler()
+    this.makeWatchRequest()
   }
 
   public stop(): void {
@@ -84,8 +82,8 @@ export class Informer<T> {
     this.controller.abort()
   }
 
-  private makeWatchRequest(kc: k8s.KubeConfig, path: string, output: PassThrough) {
-    const cluster = kc.getCurrentCluster()
+  private makeWatchRequest(): void {
+    const cluster = this.kubeConfig.getCurrentCluster()
 
     const opts: https.RequestOptions = {}
 
@@ -94,7 +92,7 @@ export class Informer<T> {
     }
     params.watch = true
 
-    kc.applytoHTTPSOptions(opts)
+    this.kubeConfig.applytoHTTPSOptions(opts)
 
     const controller = new AbortController()
     const stream = byline.createStream()
@@ -108,7 +106,7 @@ export class Informer<T> {
       rejectUnauthorized: opts.rejectUnauthorized
     })
 
-    const url = cluster?.server + '/api/v1/namespaces'
+    const url = cluster?.server + this.path
 
     axios
       .request({
@@ -121,7 +119,7 @@ export class Informer<T> {
         httpsAgent
       })
       .then((response) => {
-        response.data.pipe(stream).pipe(simpleTransform).pipe(output, { end: false })
+        response.data.pipe(stream).pipe(simpleTransform).pipe(this.stream, { end: false })
         response.data.once('end', () => {
           httpsAgent.destroy()
         })
@@ -130,41 +128,6 @@ export class Informer<T> {
         httpsAgent.destroy()
         console.error(err)
       })
-  }
-
-  private async doneHandler(err?: any) {
-    if (err) {
-      // handle error to see if it is a 410 GONE error, this needs to recover from resourceVersion
-      this.handleError(new Error(`informer failed for ${err}`))
-    }
-
-    if (this.request) {
-      // abort last request
-      this.request.abort()
-      this.request = undefined
-    }
-
-    const promise = await this.listFn()
-    const result = await promise
-
-    const list = result.body
-    this.resourceVersion = list.metadata?.resourceVersion
-
-    this.cache && this.cache.syncObjects(list.items)
-
-    // informer may have been stopped since the above request is asynchronous
-    if (!this.started) {
-      return
-    }
-
-    const
-
-    this.request = await this.watch.watch(
-      this.path,
-      { resourceVersion: list.metadata?.resourceVersion },
-      this.watchHandler.bind(this),
-      this.doneHandler.bind(this)
-    )
   }
 
   private handleError(err) {

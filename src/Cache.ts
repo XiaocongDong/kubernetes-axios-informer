@@ -1,6 +1,6 @@
-import { KubernetesObject } from "@kubernetes/client-node"
+import { KubernetesObject } from '@kubernetes/client-node'
 
-export class Cache<T extends KubernetesObject>{
+export class Cache<T extends KubernetesObject> {
   private objects: T[] = []
 
   public list(namespace?: string): ReadonlyArray<T> {
@@ -8,12 +8,12 @@ export class Cache<T extends KubernetesObject>{
       return this.objects as ReadonlyArray<T>
     }
 
-    return this.objects.filter(object => object.metadata!.namespace === namespace)
+    return this.objects.filter((object) => object.metadata?.namespace === namespace)
   }
 
   public get(name: string, namespace?: string) {
-    return this.objects.find(object =>
-      object.metadata!.name === name && (!namespace || namespace === object.metadata!.namespace)
+    return this.objects.find(
+      (object) => object.metadata?.name === name && (!namespace || namespace === object.metadata?.namespace)
     )
   }
 
@@ -33,34 +33,31 @@ export class Cache<T extends KubernetesObject>{
   }
 }
 
-function addOrUpdateObject<T extends KubernetesObject>(
-  objects: T[],
-  obj: T
-): void {
+function addOrUpdateObject<T extends KubernetesObject>(objects: T[], obj: T): void {
   const ix = findKubernetesObject(objects, obj)
   if (ix === -1) {
-      objects.push(obj)
+    objects.push(obj)
   } else {
-      if (!isSameVersion(objects[ix], obj)) {
-          objects[ix] = obj
-      }
+    if (!isSameVersion(objects[ix], obj)) {
+      objects[ix] = obj
+    }
   }
 }
 
 function isSameObject<T extends KubernetesObject>(o1: T, o2: T): boolean {
-  return o1.metadata!.name === o2.metadata!.name && o1.metadata!.namespace === o2.metadata!.namespace
+  return o1.metadata?.name === o2.metadata?.name && o1.metadata?.namespace === o2.metadata?.namespace
 }
 
 function isSameVersion<T extends KubernetesObject>(o1: T, o2: T): boolean {
   return (
-      o1.metadata!.resourceVersion !== undefined &&
-      o1.metadata!.resourceVersion !== null &&
-      o1.metadata!.resourceVersion === o2.metadata!.resourceVersion
+    o1.metadata?.resourceVersion !== undefined &&
+    o1.metadata?.resourceVersion !== null &&
+    o1.metadata?.resourceVersion === o2.metadata?.resourceVersion
   )
 }
 
 function findKubernetesObject<T extends KubernetesObject>(objects: T[], obj: T): number {
   return objects.findIndex((elt: T) => {
-      return isSameObject(elt, obj)
+    return isSameObject(elt, obj)
   })
 }
