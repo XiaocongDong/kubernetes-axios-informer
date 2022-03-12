@@ -8,7 +8,6 @@ export function makeInformer<T>(
   listPromiseFn: ListPromise<T>,
   enableCache = true
 ): Informer<T> {
-
   const informer = new Informer<T>(path, listPromiseFn, kubeConfig, enableCache)
 
   return informer

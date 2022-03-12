@@ -5,9 +5,9 @@ import { PassThrough, Transform, TransformOptions } from 'stream'
 import { Agent } from 'https'
 import * as k8s from '@kubernetes/client-node'
 import * as https from 'https'
-import axios, { AxiosRequestHeaders } from 'axios'
-import EventEmitter = require('events')
-import byline = require('byline')
+import fetch, { Headers } from 'node-fetch'
+import * as EventEmitter from 'events'
+import * as byline from 'byline'
 
 export enum EVENT {
   ADD = 'add',
@@ -87,10 +87,10 @@ export class Informer<T> {
 
     const opts: https.RequestOptions = {}
 
-    const params: any = {
-      allowWatchBookmarks: true
-    }
-    params.watch = true
+    const params: URLSearchParams = new URLSearchParams({
+      allowWatchBookmarks: 'true',
+      watch: 'true'
+    })
 
     this.kubeConfig.applytoHTTPSOptions(opts)
 
@@ -105,7 +105,7 @@ export class Informer<T> {
       rejectUnauthorized: opts.rejectUnauthorized
     })
 
-    const url = cluster?.server + this.path
+    const url = cluster?.server + this.path + '?' + params
 
     // unsure why abort does not cause axios to do the right thing
     // when we destroy the http agent it closes all connections
@@ -113,24 +113,30 @@ export class Informer<T> {
       console.log('destroying https agent')
       httpsAgent.destroy()
     })
+    const headers = new Headers()
 
-    axios
-      .request({
-        method: 'GET',
-        headers: opts.headers as AxiosRequestHeaders,
-        signal: this.controller.signal,
-        url,
-        params,
-        responseType: 'stream',
-        httpsAgent
-      })
+    for (const key in opts.headers) {
+      const header = opts.headers[key]?.toString()
+      if (header !== undefined) {
+        headers.set(key, header)
+      }
+    }
+    console.log(url)
+    fetch(url, {
+      method: 'GET',
+      headers,
+      signal: this.controller.signal,
+      agent: httpsAgent
+    })
       .then((response) => {
-        response.data.pipe(stream).pipe(simpleTransform).pipe(this.stream, { end: false })
-        response.data
-          .on('end', () => console.log('end'))
-          .on('close', () => console.log('close'))
-          .on('aborted', () => console.log('aborted'))
-          .on('error', (err) => console.log(err))
+        if (response.body !== null) {
+          response.body.pipe(stream).pipe(simpleTransform).pipe(this.stream, { end: false })
+          response.body
+            .on('end', () => console.log('request end'))
+            .on('close', () => console.log('request close'))
+            .on('aborted', () => console.log('request aborted'))
+            .on('error', (err) => console.log(err, 'Caught error here!'))
+        }
       })
       .catch((err) => {
         httpsAgent.destroy()
